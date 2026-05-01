@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FeedSchool">
+  <title>FeedSchool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+  .phone-frame { width: 100vw; height: 100vh; overflow: hidden; position: fixed; top: 0; left: 0; background: #F8F9FA; }
+  .screen { width: 100%; height: 100%; background: #fff; position: absolute; top: 0; left: 0; display: none; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; }
+
+  /* ── Paleta única ── */
+  --blue: #1565C0;
+  --blue-light: #E3F2FD;
+  --green: #558B2F;
+  --green-light: #F1F8E9;
+  --orange: #E65100;
+  --orange-light: #FFF3E0;
+
+  .status-bar { background: #1565C0; height: 44px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 16px 8px; gap: 6px; flex-shrink: 0; padding-top: env(safe-area-inset-top, 20px); }
+  .status-bar span { color: #fff; font-size: 12px; }
+  .top-bar { background: #1565C0; padding: 12px 18px 14px; flex-shrink: 0; }
+  .top-bar h2 { color: #fff; font-size: 18px; font-weight: 700; }
+  .top-bar p { color: rgba(255,255,255,0.78); font-size: 13px; margin-top: 2px; }
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; background: #F8F9FA; }
+  .nav-bar { height: 60px; background: #fff; border-top: 0.5px solid #e0e0e0; display: flex; align-items: center; justify-content: space-around; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 10px; border-radius: 10px; }
+  .nav-item.on .nav-icon { background: #1565C0; }
+  .nav-item.on .nav-label { color: #1565C0; font-weight: 700; }
+  .nav-icon { width: 26px; height: 26px; border-radius: 7px; background: #bdbdbd; }
+  .nav-label { font-size: 10px; color: #9e9e9e; }
+
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; border: 0.5px solid #e0e0e0; }
+  .card-title { font-size: 13px; font-weight: 700; color: #1565C0; margin-bottom: 8px; }
+  .card-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .card-row:last-child { border-bottom: none; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .db { background: #1565C0; } .dg { background: #558B2F; } .do { background: #E65100; }
+  .card-row-text { font-size: 13px; color: #212121; flex: 1; }
+  .card-row-sub { font-size: 11px; color: #9e9e9e; }
+
+  .tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .tb { background: #E3F2FD; color: #1565C0; }
+  .tg { background: #F1F8E9; color: #558B2F; }
+  .to { background: #FFF3E0; color: #E65100; }
+  .tr { background: #FFEBEE; color: #C62828; }
+
+  .btn { display: block; width: 100%; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 700; text-align: center; border: none; }
+  .bp { background: #1565C0; color: #fff; }
+  .bo { background: transparent; border: 1.5px solid #1565C0; color: #1565C0; }
+  .bg { background: #558B2F; color: #fff; }
+
+  .input-field { width: 100%; padding: 12px 14px; border-radius: 10px; border: 0.5px solid #e0e0e0; font-size: 14px; background: #FAFAFA; color: #212121; margin-bottom: 10px; -webkit-appearance: none; outline: none; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .ab { background: #E3F2FD; color: #1565C0; }
+  .ag { background: #F1F8E9; color: #558B2F; }
+  .ao { background: #FFF3E0; color: #E65100; }
+
+  .msg-bubble { padding: 10px 13px; border-radius: 14px; font-size: 13px; max-width: 80%; line-height: 1.5; color: #212121; }
+  .mi { background: #F0F0F0; border-bottom-left-radius: 3px; }
+  .mo { background: #1565C0; color: #fff; border-bottom-right-radius: 3px; align-self: flex-end; }
+  .msg-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+  .msg-row.out { flex-direction: row-reverse; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+  .cal-day-name { font-size: 11px; color: #9e9e9e; padding: 4px 0; font-weight: 600; }
+  .cal-day { font-size: 13px; padding: 7px 2px; border-radius: 8px; color: #212121; position: relative; }
+  .cal-day.today { background: #1565C0; color: #fff; font-weight: 700; border-radius: 50%; }
+  .cal-day.ev::after { content: ''; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #E65100; }
+  .cal-day.evg::after { background: #558B2F; }
+
+  .section-label { font-size: 12px; font-weight: 700; color: #9e9e9e; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 8px; }
+  .notif-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot { width: 9px; height: 9px; border-radius: 50%; background: #1565C0; margin-top: 4px; flex-shrink: 0; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle { width: 40px; height: 22px; border-radius: 11px; background: #1565C0; position: relative; }
+  .toggle::after { content: ''; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .toggle.off { background: #e0e0e0; }
+  .toggle.off::after { right: auto; left: 3px; }
+
+  .logo-text { font-size: 24px; font-weight: 800; }
+  .logo-text span { color: #1565C0; }
+  .logo-text em { color: #558B2F; font-style: normal; }
+
+  /* iOS tap fix — make all interactive elements tappable */
+  [data-goto], [data-role], [data-star], button, .role-card, .nav-item, .card[data-goto] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.08);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* role selector */
+  .role-card { width: 100%; padding: 18px; border-radius: 16px; border: 2px solid #e0e0e0; background: #fff; display: flex; align-items: center; gap: 16px; margin-bottom: 14px; transition: border-color 0.15s; }
+  .role-card:active { background: #F8F9FA; }
+  .role-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* teacher progress bar */
+  .prog-bar { height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; flex: 1; }
+  .prog-fill { height: 100%; border-radius: 3px; }
+
+  /* pill tabs */
+  .pill-tabs { display: flex; background: #ECEFF1; border-radius: 20px; padding: 4px; margin-bottom: 14px; }
+  .pill-tab { flex: 1; text-align: center; padding: 7px 4px; border-radius: 16px; font-size: 12px; font-weight: 600; color: #9e9e9e; border: none; background: transparent; }
+  .pill-tab.on { background: #1565C0; color: #fff; }
+
+  .star-row span { font-size: 26px; color: #e0e0e0; }
+  .star-row span.lit { color: #FFC107; }
+
+  /* feedback box */
+  .fb-box { background: #F1F8E9; border-radius: 10px; padding: 11px 12px; border-left: 3px solid #558B2F; }
+  .fb-box-b { background: #E3F2FD; border-radius: 10px; padding: 11px 12px; border-left: 3px solid #1565C0; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+<!-- ════════════════════════════════════
+     SPLASH / LOGIN
+════════════════════════════════════ -->
+<div class="screen active" id="s-splash">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;background:#fff;">
+    <div style="margin-bottom:20px;">
+      <svg width="74" height="74" viewBox="0 0 74 74">
+        <circle cx="37" cy="37" r="35" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.5"/>
+        <ellipse cx="37" cy="44" rx="22" ry="10" fill="#1565C0" opacity="0.12"/>
+        <rect x="20" y="28" width="34" height="22" rx="4" fill="#fff" stroke="#1565C0" stroke-width="1.5"/>
+        <rect x="25" y="33" width="24" height="3" rx="1.5" fill="#1565C0" opacity="0.5"/>
+        <rect x="25" y="39" width="16" height="3" rx="1.5" fill="#558B2F" opacity="0.7"/>
+        <polygon points="37,13 44,24 30,24" fill="#E65100"/>
+        <circle cx="37" cy="12" r="4.5" fill="#E65100"/>
+        <rect x="35" y="18" width="4" height="7" fill="#E65100"/>
+      </svg>
+    </div>
+    <div class="logo-text"><span>Feed</span><em>School</em></div>
+    <div style="font-size:13px;color:#9e9e9e;margin-top:5px;">Work smarter, be the master</div>
+    <div style="width:100%;margin:30px 0 16px;">
+      <input class="input-field" type="email" placeholder="Correo electrónico"/>
+      <input class="input-field" type="password" placeholder="Contraseña" style="margin-bottom:0;"/>
+    </div>
+    <button class="btn bp" data-goto="s-role" style="margin-bottom:12px;">Continuar</button>
+    <div style="font-size:12px;color:#9e9e9e;">¿No tienes cuenta? <span style="color:#1565C0;">Regístrate</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SELECCIÓN DE ROL
+════════════════════════════════════ -->
+<div class="screen" id="s-role">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px;background:#F8F9FA;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div class="logo-text" style="font-size:18px;"><span>Feed</span><em>School</em></div>
+      <div style="font-size:14px;color:#555;margin-top:8px;font-weight:600;">¿Cómo ingresas hoy?</div>
+    </div>
+
+    <button class="role-card" data-role="student">
+      <div class="role-icon" style="background:#E3F2FD;">
+        <svg width="26" height="26" viewBox="0 0 26 26">
+          <rect x="5" y="10" width="16" height="11" rx="2.5" fill="#1565C0" opacity="0.25"/>
+          <polygon points="13,4 21,10 5,10" fill="#1565C0"/>
+          <rect x="10" y="17" width="6" height="4" rx="1" fill="#1565C0"/>
+        </svg>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-size:15px;font-weight:700;color:#212121;">Soy Estudiante</div>
+        <div style="font-size:12px;color:#9e9e9e;margin-top:2px;">Tareas, dudas, feedback y calendario</div>
+      </div>
+      <div style="margin-left:auto;font-size:18px;color:#bdbdbd;">›</div>
+    </button>
+
+    <button class="role-card" data-role="teacher">
+      <div class="role-icon" style="background:#F1F8E9;">
+        <svg width="26" height="26" viewBox="0 0 26 26">
+          <rect x="3" y="6" width="20" height="14" rx="2.5" fill="#558B2F" opacity="0.25"/>
+          <rect x="7" y="10" width="12" height="2.5" rx="1.25" fill="#558B2F"/>
+          <rect x="7" y="14" width="7" height="2.5" rx="1.25" fill="#558B2F"/>
+          <circle cx="20" cy="19" r="4" fill="#558B2F"/>
+          <path d="M18.5 19h3M20 17.5v3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-size:15px;font-weight:700;color:#212121;">Soy Profesor/a</div>
+        <div style="font-size:12px;color:#9e9e9e;margin-top:2px;">Tareas, feedback y resolver dudas</div>
+      </div>
+      <div style="margin-left:auto;font-size:18px;color:#bdbdbd;">›</div>
+    </button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     ████  MUNDO ESTUDIANTE  ████
+════════════════════════════════════════════════════ -->
+
+<!-- DASHBOARD ALUMNO -->
+<div class="screen" id="s-dash-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar" style="display:flex;align-items:center;justify-content:space-between;">
+    <div><h2>Hola, Pedro 👋</h2><p>Jueves, 1 de mayo</p></div>
+    <div data-goto="s-profile-stu"><div class="avatar ab" style="width:36px;height:36px;font-size:13px;">PG</div></div>
+  </div>
+  <div class="content">
+    <div class="card" style="border-left:3px solid #1565C0;" data-goto="s-cal-stu">
+      <div class="card-title">Próximas tareas</div>
+      <div class="card-row"><div class="dot do"></div><div style="flex:1;"><div class="card-row-text">Historia — Proyecto Civil War</div><div class="card-row-sub">Hoy 9:00 AM</div></div><span class="tag to">Urgente</span></div>
+      <div class="card-row"><div class="dot db"></div><div style="flex:1;"><div class="card-row-text">Matemáticas — Tarea #4</div><div class="card-row-sub">Mañana 6:00 PM</div></div><span class="tag tb">Pendiente</span></div>
+      <div class="card-row"><div class="dot dg"></div><div style="flex:1;"><div class="card-row-text">Biología — Informe mitosis</div><div class="card-row-sub">Vie 8:00 AM</div></div><span class="tag tg">A tiempo</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="card" style="padding:12px;" data-goto="s-dudas-stu">
+        <svg width="22" height="22" viewBox="0 0 22 22" style="margin-bottom:5px;"><circle cx="11" cy="11" r="9" fill="#E3F2FD"/><text x="11" y="15" text-anchor="middle" font-size="12" fill="#1565C0" font-weight="700">?</text></svg>
+        <div style="font-size:12px;font-weight:700;color:#212121;">Dudas</div>
+        <div style="font-size:10px;color:#9e9e9e;">Prof. Fernanda activa</div>
+      </div>
+      <div class="card" style="padding:12px;" data-goto="s-feedback-stu">
+        <svg width="22" height="22" viewBox="0 0 22 22" style="margin-bottom:5px;"><rect x="3" y="5" width="16" height="12" rx="2" fill="#F1F8E9"/><path d="M7 9h8M7 12h5" stroke="#558B2F" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div style="font-size:12px;font-weight:700;color:#212121;">Feedback</div>
+        <div style="font-size:10px;color:#9e9e9e;">2 proyectos revisados</div>
+      </div>
+    </div>
+    <div class="card" data-goto="s-notifs-stu">
+      <div class="card-title">Notificaciones</div>
+      <div class="card-row"><div class="avatar ag" style="width:26px;height:26px;font-size:9px;">PV</div><div style="flex:1;"><div class="card-row-text">Prof. Villafaena subió feedback</div><div class="card-row-sub">Hace 30 min</div></div></div>
+      <div class="card-row"><div class="avatar ao" style="width:26px;height:26px;font-size:9px;">JM</div><div style="flex:1;"><div class="card-row-text">Prof. Mazuret respondió tu duda</div><div class="card-row-sub">Hace 1 hora</div></div></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item on" data-goto="s-dash-stu"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Inicio</span></div>
+    <div class="nav-item" data-goto="s-cal-stu"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+    <div class="nav-item" data-goto="s-dudas-stu"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-feedback-stu"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+    <div class="nav-item" data-goto="s-notifs-stu"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+  </div>
+</div>
+
+<!-- CALENDARIO ALUMNO -->
+<div class="screen" id="s-cal-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-stu" style="color:#fff;font-size:22px;">‹</span><div><h2>Calendario</h2><p>Mayo 2026</p></div></div></div>
+  <div class="content">
+    <div class="card">
+      <div class="cal-grid">
+        <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">X</div><div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
+        <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day today ev">1</div><div class="cal-day ev">2</div><div class="cal-day">3</div><div class="cal-day">4</div>
+        <div class="cal-day">5</div><div class="cal-day ev">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day ev">9</div><div class="cal-day">10</div><div class="cal-day">11</div>
+        <div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day ev">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div>
+        <div class="cal-day">19</div><div class="cal-day ev">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day ev">23</div><div class="cal-day">24</div><div class="cal-day">25</div>
+        <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div class="cal-day"></div>
+      </div>
+    </div>
+    <div class="section-label">Hoy — 1 Mayo</div>
+    <div class="card">
+      <div class="card-row"><div class="dot do"></div><div style="flex:1;"><div class="card-row-text">Historia — Proyecto Civil War</div><div class="card-row-sub">9:00 AM · Prof. Mazuret</div></div><span class="tag to">Entregar</span></div>
+    </div>
+    <div class="section-label">Esta semana</div>
+    <div class="card">
+      <div class="card-row"><div class="dot db"></div><div style="flex:1;"><div class="card-row-text">Matemáticas — Tarea #4</div><div class="card-row-sub">2 mayo · 6:00 PM</div></div><span class="tag tb">Pendiente</span></div>
+      <div class="card-row"><div class="dot dg"></div><div style="flex:1;"><div class="card-row-text">Biología — Informe mitosis</div><div class="card-row-sub">9 mayo · 8:00 AM</div></div><span class="tag tg">A tiempo</span></div>
+      <div class="card-row"><div class="dot db"></div><div style="flex:1;"><div class="card-row-text">Diseño — Tipografía Editorial</div><div class="card-row-sub">8 mayo · 23:59</div></div><span class="tag tb">Pendiente</span></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-stu"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item on" data-goto="s-cal-stu"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Calendario</span></div>
+    <div class="nav-item" data-goto="s-dudas-stu"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-feedback-stu"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+    <div class="nav-item" data-goto="s-notifs-stu"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+  </div>
+</div>
+
+<!-- DUDAS ALUMNO -->
+<div class="screen" id="s-dudas-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-stu" style="color:#fff;font-size:22px;">‹</span><div><h2>Resolución de dudas</h2><p>Pregunta a tus profesores</p></div></div></div>
+  <div class="content" style="display:flex;flex-direction:column;">
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">PV</div>
+      <div><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;">Prof. Villafaena · Diseño</div><div class="msg-bubble mi">Hola Pedro, el logo puede tener máximo 3 colores de tu paleta. ¡Mucho ánimo!</div></div>
+    </div>
+    <div class="msg-row out">
+      <div class="avatar ab" style="width:28px;height:28px;font-size:9px;">PG</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;text-align:right;">Tú</div><div class="msg-bubble mo">¿La versión monocromática también va en la entrega?</div></div>
+    </div>
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">PV</div>
+      <div><div class="msg-bubble mi">Sí, incluye color y monocromática. Son los usos mínimos de cualquier manual.</div></div>
+    </div>
+    <div class="msg-row out">
+      <div class="avatar ab" style="width:28px;height:28px;font-size:9px;">PG</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;"><div class="msg-bubble mo">Profe Fernanda, ¿me puede explicar la fotosíntesis para el informe? #biología</div></div>
+    </div>
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">FM</div>
+      <div><div class="msg-bubble mi" style="background:#E3F2FD;color:#1565C0;">Respondiendo… ✏️</div></div>
+    </div>
+  </div>
+  <div style="padding:10px 14px;background:#fff;border-top:0.5px solid #e0e0e0;display:flex;gap:8px;flex-shrink:0;">
+    <input class="input-field" placeholder="Escribe tu duda..." style="flex:1;margin-bottom:0;"/>
+    <button style="background:#1565C0;border:none;border-radius:10px;padding:0 14px;color:#fff;font-size:18px;">→</button>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-stu"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-cal-stu"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+    <div class="nav-item on" data-goto="s-dudas-stu"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Dudas</span></div>
+    <div class="nav-item" data-goto="s-feedback-stu"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+    <div class="nav-item" data-goto="s-notifs-stu"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+  </div>
+</div>
+
+<!-- FEEDBACK ALUMNO -->
+<div class="screen" id="s-feedback-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-stu" style="color:#fff;font-size:22px;">‹</span><div><h2>Mi feedback</h2><p>Retroalimentación recibida</p></div></div></div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Diseño — Branding Identidad</div>
+      <div style="display:flex;align-items:center;gap:8px;background:#F8F9FA;border-radius:8px;padding:8px 10px;border:0.5px solid #e0e0e0;margin-bottom:10px;">
+        <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="2" width="12" height="14" rx="2" fill="#E3F2FD" stroke="#1565C0" stroke-width="1"/></svg>
+        <span style="font-size:12px;color:#1565C0;font-weight:600;">Branding_Pedro_v2.pdf</span>
+        <span class="tag tg" style="margin-left:auto;">Entregado</span>
+      </div>
+      <div class="fb-box">
+        <div style="font-size:10px;color:#558B2F;font-weight:700;margin-bottom:5px;">✏️ Prof. Villafaena · hace 30 min</div>
+        <div style="font-size:12px;color:#212121;line-height:1.6;">El concepto está bien fundamentado. Revisa la consistencia tipográfica — hay dos pesos que compiten en el isologo. Para la siguiente versión incluye los usos incorrectos del logo.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+        <span style="color:#FFC107;font-size:16px;">★★★★</span><span style="color:#e0e0e0;font-size:16px;">★</span>
+        <span style="font-size:11px;color:#9e9e9e;margin-left:4px;">4/5 · Muy bueno</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historia — Proyecto Civil War</div>
+      <div class="fb-box-b" style="margin-bottom:10px;">
+        <div style="font-size:10px;color:#1565C0;font-weight:700;margin-bottom:5px;">✏️ Prof. Mazuret · ayer</div>
+        <div style="font-size:12px;color:#212121;line-height:1.6;">¡Gran trabajo! Por favor provee más detalles sobre la sección de la Guerra Civil. Las fuentes son buenas pero necesitas expandir el análisis.</div>
+      </div>
+      <div style="display:flex;gap:6px;"><span class="tag tg">Historia</span><span class="tag to">Revisar</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Matemáticas — Tarea #4</div>
+      <div style="background:#FFF3E0;border-radius:8px;padding:10px;border-left:3px solid #E65100;">
+        <div style="font-size:10px;color:#E65100;font-weight:700;margin-bottom:4px;">Pendiente de entrega</div>
+        <div style="font-size:11px;color:#212121;">Aún no has subido este proyecto.</div>
+      </div>
+      <button class="btn bo" style="margin-top:10px;font-size:13px;padding:9px;">Subir archivo</button>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-stu"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-cal-stu"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+    <div class="nav-item" data-goto="s-dudas-stu"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item on" data-goto="s-feedback-stu"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Feedback</span></div>
+    <div class="nav-item" data-goto="s-notifs-stu"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+  </div>
+</div>
+
+<!-- NOTIFS ALUMNO -->
+<div class="screen" id="s-notifs-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-stu" style="color:#fff;font-size:22px;">‹</span><div><h2>Notificaciones</h2><p>3 nuevas</p></div></div></div>
+  <div class="content">
+    <div class="section-label">Hoy</div>
+    <div class="card">
+      <div class="notif-item"><div class="notif-dot" style="background:#558B2F;"></div><div><div style="font-size:12px;font-weight:600;color:#212121;">Prof. Villafaena subió feedback</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Hace 30 min · Diseño</div></div></div>
+      <div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:12px;font-weight:600;color:#212121;">Prof. Mazuret respondió tu duda</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Hace 1 hora · Historia</div></div></div>
+      <div class="notif-item"><div class="notif-dot" style="background:#E65100;"></div><div><div style="font-size:12px;font-weight:600;color:#212121;">Tarea de Historia vence hoy</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">9:00 AM · ¡No olvides entregar!</div></div></div>
+    </div>
+    <div class="section-label">Ayer</div>
+    <div class="card">
+      <div class="notif-item"><div class="notif-dot" style="background:#bdbdbd;"></div><div><div style="font-size:12px;font-weight:600;color:#212121;">Nueva tarea asignada: Biología</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Ayer 3:00 PM · Prof. Fernanda</div></div></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-stu"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-cal-stu"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+    <div class="nav-item" data-goto="s-dudas-stu"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-feedback-stu"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+    <div class="nav-item on" data-goto="s-notifs-stu"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Avisos</span></div>
+  </div>
+</div>
+
+<!-- PERFIL ALUMNO -->
+<div class="screen" id="s-profile-stu">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-stu" style="color:#fff;font-size:22px;">‹</span><div><h2>Perfil</h2></div></div></div>
+  <div class="content">
+    <div class="card" style="text-align:center;padding:22px;">
+      <div class="avatar ab" style="width:60px;height:60px;font-size:20px;margin:0 auto 10px;">PG</div>
+      <div style="font-size:16px;font-weight:700;color:#212121;">Pedro González</div>
+      <div style="font-size:12px;color:#9e9e9e;margin-top:3px;">Estudiante · 3°A Diseño</div>
+      <div style="margin-top:10px;"><span class="tag tb">Modo Estudiante</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Configuración</div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Notificaciones</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Recordatorios de tareas</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Modo oscuro</span><div class="toggle off"></div></div>
+    </div>
+    <button class="btn bo" data-goto="s-role" style="margin-bottom:10px;">Cambiar rol</button>
+    <button class="btn" style="background:#FFEBEE;color:#C62828;border:none;" data-goto="s-splash">Cerrar sesión</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     ████  MUNDO PROFESOR  ████
+════════════════════════════════════════════════════ -->
+
+<!-- DASHBOARD PROFE -->
+<div class="screen" id="s-dash-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar" style="display:flex;align-items:center;justify-content:space-between;">
+    <div><h2>Hola, Pamela 👋</h2><p>Diseño · Jueves 1 de mayo</p></div>
+    <div data-goto="s-profile-tch"><div class="avatar ag" style="width:36px;height:36px;font-size:13px;">PV</div></div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="card" style="padding:12px;text-align:center;" data-goto="s-trabajos-tch">
+        <div style="font-size:22px;font-weight:800;color:#1565C0;">7</div>
+        <div style="font-size:10px;color:#9e9e9e;margin-top:2px;">Por revisar</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center;" data-goto="s-dudas-tch">
+        <div style="font-size:22px;font-weight:800;color:#558B2F;">4</div>
+        <div style="font-size:10px;color:#9e9e9e;margin-top:2px;">Dudas nuevas</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center;" data-goto="s-tareas-tch">
+        <div style="font-size:22px;font-weight:800;color:#E65100;">2</div>
+        <div style="font-size:10px;color:#9e9e9e;margin-top:2px;">Vencen hoy</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid #1565C0;" data-goto="s-trabajos-tch">
+      <div class="card-title">Trabajos por revisar</div>
+      <div class="card-row"><div class="avatar ag" style="width:28px;height:28px;font-size:9px;">SC</div><div style="flex:1;"><div class="card-row-text">Sofía Castro — Branding Identidad</div><div class="card-row-sub">Entregado hace 2 h · 3°A</div></div><span class="tag to">Nuevo</span></div>
+      <div class="card-row"><div class="avatar ab" style="width:28px;height:28px;font-size:9px;">MR</div><div style="flex:1;"><div class="card-row-text">Martín Ríos — Tipografía Editorial</div><div class="card-row-sub">Entregado ayer · 3°A</div></div><span class="tag tb">Pendiente</span></div>
+      <div class="card-row"><div class="avatar ao" style="width:28px;height:28px;font-size:9px;">LM</div><div style="flex:1;"><div class="card-row-text">Lucía Mora — Composición Visual</div><div class="card-row-sub">Entregado hace 3 días · 3°B</div></div><span class="tag tb">Pendiente</span></div>
+    </div>
+    <div class="card" data-goto="s-dudas-tch">
+      <div class="card-title">Dudas sin responder</div>
+      <div class="card-row"><div class="avatar ag" style="width:28px;height:28px;font-size:9px;">AM</div><div style="flex:1;"><div class="card-row-text">¿Cuántos colores puede tener el logo?</div><div class="card-row-sub">Andrés Muñoz · hace 10 min</div></div><div style="width:8px;height:8px;border-radius:50%;background:#1565C0;flex-shrink:0;"></div></div>
+      <div class="card-row"><div class="avatar ab" style="width:28px;height:28px;font-size:9px;">VP</div><div style="flex:1;"><div class="card-row-text">¿El mockup va en PDF o PNG?</div><div class="card-row-sub">Valentina Pérez · hace 25 min</div></div><div style="width:8px;height:8px;border-radius:50%;background:#1565C0;flex-shrink:0;"></div></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item on" data-goto="s-dash-tch"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Inicio</span></div>
+    <div class="nav-item" data-goto="s-trabajos-tch"><div class="nav-icon"></div><span class="nav-label">Trabajos</span></div>
+    <div class="nav-item" data-goto="s-tareas-tch"><div class="nav-icon"></div><span class="nav-label">Tareas</span></div>
+    <div class="nav-item" data-goto="s-dudas-tch"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-cal-tch"><div class="nav-icon"></div><span class="nav-label">Agenda</span></div>
+  </div>
+</div>
+
+<!-- TRABAJOS / FEEDBACK PROFE -->
+<div class="screen" id="s-trabajos-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Trabajos entregados</h2><p>3°A Diseño · 7 sin revisar</p></div></div></div>
+  <div class="content">
+    <div class="pill-tabs">
+      <button class="pill-tab on">Por revisar</button>
+      <button class="pill-tab">Revisados</button>
+      <button class="pill-tab">Todos</button>
+    </div>
+    <div class="card" data-goto="s-dar-feedback">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar ag" style="width:40px;height:40px;font-size:13px;">SC</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#212121;">Sofía Castro</div><div style="font-size:11px;color:#9e9e9e;">Branding Identidad · hace 2 h</div></div>
+        <span class="tag to">Nuevo</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:#F8F9FA;border-radius:10px;padding:10px;border:0.5px solid #e0e0e0;margin-bottom:10px;">
+        <svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="2" width="14" height="16" rx="2" fill="#E3F2FD" stroke="#1565C0" stroke-width="1"/></svg>
+        <span style="font-size:12px;color:#1565C0;font-weight:600;">Branding_SofiaCastro_v2.pdf</span>
+      </div>
+      <button class="btn bp" style="font-size:13px;padding:10px;" data-goto="s-dar-feedback">✏️ Dar feedback</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar ab" style="width:40px;height:40px;font-size:13px;">MR</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#212121;">Martín Ríos</div><div style="font-size:11px;color:#9e9e9e;">Tipografía Editorial · ayer</div></div>
+        <span class="tag tb">Pendiente</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:#F8F9FA;border-radius:10px;padding:10px;border:0.5px solid #e0e0e0;margin-bottom:10px;">
+        <svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="2" width="14" height="16" rx="2" fill="#E3F2FD" stroke="#1565C0" stroke-width="1"/></svg>
+        <span style="font-size:12px;color:#1565C0;font-weight:600;">Tipografia_Martin_final.pdf</span>
+      </div>
+      <button class="btn bo" style="font-size:13px;padding:10px;">✏️ Dar feedback</button>
+    </div>
+    <div class="card" style="opacity:0.75;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div class="avatar ao" style="width:40px;height:40px;font-size:13px;">LM</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#212121;">Lucía Mora</div><div style="font-size:11px;color:#9e9e9e;">Composición Visual · revisado</div></div>
+        <span class="tag tg">✓ Listo</span>
+      </div>
+      <div class="fb-box">
+        <div style="font-size:10px;color:#558B2F;font-weight:700;margin-bottom:4px;">Feedback enviado</div>
+        <div style="font-size:12px;color:#212121;line-height:1.5;">Excelente uso del espacio negativo. Revisa la jerarquía tipográfica en la sección central.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:8px;"><span style="color:#FFC107;font-size:14px;">★★★★</span><span style="color:#e0e0e0;font-size:14px;">★</span><span style="font-size:11px;color:#9e9e9e;margin-left:4px;">4/5</span></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-tch"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item on" data-goto="s-trabajos-tch"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Trabajos</span></div>
+    <div class="nav-item" data-goto="s-tareas-tch"><div class="nav-icon"></div><span class="nav-label">Tareas</span></div>
+    <div class="nav-item" data-goto="s-dudas-tch"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-cal-tch"><div class="nav-icon"></div><span class="nav-label">Agenda</span></div>
+  </div>
+</div>
+
+<!-- DAR FEEDBACK PROFE -->
+<div class="screen" id="s-dar-feedback">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-trabajos-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Dar Feedback</h2><p>Sofía Castro · Branding Identidad</p></div></div></div>
+  <div class="content">
+    <div class="card">
+      <div style="background:#E3F2FD;border-radius:10px;height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+        <div style="text-align:center;">
+          <svg width="36" height="36" viewBox="0 0 36 36"><rect x="5" y="3" width="26" height="30" rx="4" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.5"/><rect x="10" y="11" width="16" height="2.5" rx="1.25" fill="#1565C0" opacity="0.5"/><rect x="10" y="17" width="10" height="2.5" rx="1.25" fill="#1565C0" opacity="0.35"/></svg>
+          <div style="font-size:11px;color:#1565C0;margin-top:4px;font-weight:600;">Branding_SofiaCastro_v2.pdf</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;"><span class="tag tb">3°A Diseño</span><span class="tag to">Entregado hoy</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Calificación</div>
+      <div class="star-row" style="display:flex;gap:4px;margin-bottom:4px;">
+        <span data-star="1" style="font-size:28px;color:#FFC107;">★</span>
+        <span data-star="2" style="font-size:28px;color:#FFC107;">★</span>
+        <span data-star="3" style="font-size:28px;color:#FFC107;">★</span>
+        <span data-star="4" style="font-size:28px;color:#FFC107;">★</span>
+        <span data-star="5" style="font-size:28px;color:#e0e0e0;">★</span>
+      </div>
+      <div style="font-size:11px;color:#9e9e9e;" id="star-label-tch">4/5 · Muy bueno</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Aspectos evaluados</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag tg">✓ Concepto</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">Tipografía</span>
+        <span class="tag tg">✓ Color</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">Composición</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">Presentación</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Comentario para Sofía</div>
+      <textarea class="input-field" style="height:100px;resize:none;font-family:inherit;line-height:1.5;">El concepto de identidad es muy potente. La paleta comunica bien los valores de la marca. Revisa la consistencia tipográfica — hay dos pesos que compiten en el isologo. Para la próxima versión, incluye los usos incorrectos del logo.</textarea>
+    </div>
+    <button class="btn bp" data-goto="s-trabajos-tch" style="margin-bottom:10px;">Enviar feedback ✓</button>
+    <button class="btn bo" data-goto="s-trabajos-tch">Guardar borrador</button>
+  </div>
+</div>
+
+<!-- TAREAS PROFE -->
+<div class="screen" id="s-tareas-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span data-goto="s-dash-tch" style="color:#fff;font-size:22px;">‹</span>
+        <div><h2>Mis tareas</h2><p>3°A y 3°B Diseño</p></div>
+      </div>
+      <button data-goto="s-nueva-tarea" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;">+ Nueva</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card" style="border-left:3px solid #E65100;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div><div style="font-size:14px;font-weight:700;color:#212121;">Branding Identidad</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">3°A Diseño · vence hoy 23:59</div></div>
+        <span class="tag to">Hoy</span>
+      </div>
+      <div style="font-size:12px;color:#555;background:#F8F9FA;border-radius:8px;padding:8px 12px;margin-bottom:10px;">Diseñar identidad completa para una marca ficticia de sostenibilidad.</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="prog-bar"><div class="prog-fill" style="width:68%;background:#558B2F;"></div></div>
+        <span style="font-size:11px;color:#9e9e9e;white-space:nowrap;">19/28 entregados</span>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid #E65100;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div><div style="font-size:14px;font-weight:700;color:#212121;">Composición Visual</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">3°B Diseño · vence hoy 23:59</div></div>
+        <span class="tag to">Hoy</span>
+      </div>
+      <div style="font-size:12px;color:#555;background:#F8F9FA;border-radius:8px;padding:8px 12px;margin-bottom:10px;">Crear pieza editorial usando principios de composición: regla de tercios y ritmo visual.</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="prog-bar"><div class="prog-fill" style="width:50%;background:#E65100;"></div></div>
+        <span style="font-size:11px;color:#9e9e9e;white-space:nowrap;">12/24 entregados</span>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid #1565C0;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+        <div><div style="font-size:14px;font-weight:700;color:#212121;">Tipografía Editorial</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">3°A Diseño · vence 8 mayo</div></div>
+        <span class="tag tb">En curso</span>
+      </div>
+      <div style="font-size:12px;color:#555;background:#F8F9FA;border-radius:8px;padding:8px 12px;margin-bottom:10px;">Diseñar un spread de revista usando mínimo 3 familias tipográficas.</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="prog-bar"><div class="prog-fill" style="width:25%;background:#1565C0;"></div></div>
+        <span style="font-size:11px;color:#9e9e9e;white-space:nowrap;">7/28 entregados</span>
+      </div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-tch"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-trabajos-tch"><div class="nav-icon"></div><span class="nav-label">Trabajos</span></div>
+    <div class="nav-item on" data-goto="s-tareas-tch"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Tareas</span></div>
+    <div class="nav-item" data-goto="s-dudas-tch"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item" data-goto="s-cal-tch"><div class="nav-icon"></div><span class="nav-label">Agenda</span></div>
+  </div>
+</div>
+
+<!-- NUEVA TAREA -->
+<div class="screen" id="s-nueva-tarea">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-tareas-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Nueva tarea</h2><p>Asignar a mis cursos</p></div></div></div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Título</div>
+      <input class="input-field" value="Rediseño de Marca Personal" style="margin-bottom:0;"/>
+    </div>
+    <div class="card">
+      <div class="card-title">Instrucciones</div>
+      <textarea class="input-field" style="height:80px;resize:none;font-family:inherit;line-height:1.5;">Rediseña tu marca personal como diseñador/a. Incluye: logotipo, paleta de 4 colores, tipografía y un mockup aplicado.</textarea>
+    </div>
+    <div class="card">
+      <div class="card-title">Cursos</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="tag tb">✓ 3°A Diseño</span>
+        <span class="tag tb">✓ 3°B Diseño</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">2°A</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fecha de entrega</div>
+      <input class="input-field" type="date" value="2026-05-15" style="margin-bottom:0;"/>
+    </div>
+    <div class="card">
+      <div class="card-title">Tipo de entrega</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="tag tg">📄 PDF</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">🖼 Imagen</span>
+        <span class="tag" style="background:#f5f5f5;color:#9e9e9e;">🔗 Link</span>
+      </div>
+    </div>
+    <button class="btn bg" data-goto="s-tareas-tch" style="margin-bottom:10px;">Publicar tarea ✓</button>
+    <button class="btn bo" data-goto="s-tareas-tch">Guardar borrador</button>
+  </div>
+</div>
+
+<!-- DUDAS PROFE -->
+<div class="screen" id="s-dudas-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Dudas de estudiantes</h2><p>4 sin responder</p></div></div></div>
+  <div class="content">
+    <div class="section-label">Sin responder</div>
+    <div class="card" data-goto="s-chat-tch" style="border-left:3px solid #1565C0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="avatar ag" style="width:36px;height:36px;font-size:11px;">AM</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#212121;">Andrés Muñoz</div><div style="font-size:11px;color:#9e9e9e;">3°A Diseño · hace 10 min</div></div>
+        <div style="width:9px;height:9px;border-radius:50%;background:#1565C0;"></div>
+      </div>
+      <div style="font-size:13px;color:#444;background:#E3F2FD;border-radius:8px;padding:8px 10px;">¿Cuántos colores puede tener el logotipo en el proyecto de Branding?</div>
+    </div>
+    <div class="card" style="border-left:3px solid #1565C0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="avatar ab" style="width:36px;height:36px;font-size:11px;">VP</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#212121;">Valentina Pérez</div><div style="font-size:11px;color:#9e9e9e;">3°A Diseño · hace 25 min</div></div>
+        <div style="width:9px;height:9px;border-radius:50%;background:#1565C0;"></div>
+      </div>
+      <div style="font-size:13px;color:#444;background:#E3F2FD;border-radius:8px;padding:8px 10px;">¿El mockup lo entregamos en PDF o puede ser PNG de alta resolución?</div>
+    </div>
+    <div class="card" style="border-left:3px solid #1565C0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="avatar ao" style="width:36px;height:36px;font-size:11px;">JC</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#212121;">José Carrasco</div><div style="font-size:11px;color:#9e9e9e;">3°B Diseño · hace 1 h</div></div>
+        <div style="width:9px;height:9px;border-radius:50%;background:#1565C0;"></div>
+      </div>
+      <div style="font-size:13px;color:#444;background:#E3F2FD;border-radius:8px;padding:8px 10px;">¿Puedo usar Canva para el proyecto o solo programas vectoriales?</div>
+    </div>
+    <div class="section-label">Respondidas hoy</div>
+    <div class="card" style="opacity:0.7;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div class="avatar ag" style="width:36px;height:36px;font-size:11px;">KV</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:#212121;">Karen Vidal</div><div style="font-size:11px;color:#9e9e9e;">3°B · respondida hace 2 h</div></div>
+        <span class="tag tg">✓</span>
+      </div>
+      <div style="font-size:12px;color:#9e9e9e;">¿El manual de marca debe incluir usos incorrectos?</div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-tch"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-trabajos-tch"><div class="nav-icon"></div><span class="nav-label">Trabajos</span></div>
+    <div class="nav-item" data-goto="s-tareas-tch"><div class="nav-icon"></div><span class="nav-label">Tareas</span></div>
+    <div class="nav-item on" data-goto="s-dudas-tch"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Dudas</span></div>
+    <div class="nav-item" data-goto="s-cal-tch"><div class="nav-icon"></div><span class="nav-label">Agenda</span></div>
+  </div>
+</div>
+
+<!-- CHAT DUDA PROFE -->
+<div class="screen" id="s-chat-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dudas-tch" style="color:#fff;font-size:22px;">‹</span><div class="avatar ag" style="width:30px;height:30px;font-size:10px;">AM</div><div><h2>Andrés Muñoz</h2><p>3°A Diseño</p></div></div></div>
+  <div class="content" style="display:flex;flex-direction:column;padding-bottom:8px;">
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">AM</div>
+      <div><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;">Andrés · 9:31</div><div class="msg-bubble mi">Profe, ¿cuántos colores puede tener el logotipo? En el brief dice "paleta limitada" pero no entiendo si aplica al logo también.</div></div>
+    </div>
+    <div class="msg-row out">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">PV</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;">Tú · 9:38</div><div class="msg-bubble mo">Buena pregunta Andrés! El logotipo puede usar máximo 3 colores de tu paleta. La paleta completa de marca no debe superar 5 tonos.</div></div>
+    </div>
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">AM</div>
+      <div><div class="msg-bubble mi">Perfecto! ¿Y la versión monocromática también debe ir en la entrega?</div></div>
+    </div>
+    <div class="msg-row out">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">PV</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;"><div class="msg-bubble mo">Sí, incluye versión a color y monocromática. Son los usos básicos de cualquier manual 👍</div></div>
+    </div>
+    <div class="msg-row">
+      <div class="avatar ag" style="width:28px;height:28px;font-size:9px;">AM</div>
+      <div><div class="msg-bubble mi" style="background:#E3F2FD;color:#1565C0;">Entendido, ya empiezo 🙌</div></div>
+    </div>
+  </div>
+  <div style="padding:10px 14px;background:#fff;border-top:0.5px solid #e0e0e0;display:flex;gap:8px;flex-shrink:0;">
+    <input class="input-field" placeholder="Escribe tu respuesta..." style="flex:1;margin-bottom:0;"/>
+    <button style="background:#1565C0;border:none;border-radius:10px;padding:0 14px;color:#fff;font-size:18px;">→</button>
+  </div>
+</div>
+
+<!-- AGENDA PROFE -->
+<div class="screen" id="s-cal-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Agenda docente</h2><p>Mayo 2026</p></div></div>
+      <button data-goto="s-nueva-tarea" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;">+ Tarea</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="cal-grid">
+        <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">X</div><div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
+        <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day today ev">1</div><div class="cal-day evg">2</div><div class="cal-day">3</div><div class="cal-day">4</div>
+        <div class="cal-day">5</div><div class="cal-day evg">6</div><div class="cal-day">7</div><div class="cal-day ev">8</div><div class="cal-day ev">9</div><div class="cal-day">10</div><div class="cal-day">11</div>
+        <div class="cal-day">12</div><div class="cal-day evg">13</div><div class="cal-day">14</div><div class="cal-day ev">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div>
+        <div class="cal-day">19</div><div class="cal-day evg">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day evg">23</div><div class="cal-day">24</div><div class="cal-day">25</div>
+        <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div class="cal-day"></div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:0.5px solid #f0f0f0;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#9e9e9e;"><div style="width:7px;height:7px;border-radius:50%;background:#558B2F;"></div>Clase</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#9e9e9e;"><div style="width:7px;height:7px;border-radius:50%;background:#E65100;"></div>Entrega</div>
+      </div>
+    </div>
+    <div class="section-label">Hoy — 1 Mayo</div>
+    <div class="card">
+      <div class="card-row"><div class="dot do"></div><div style="flex:1;"><div class="card-row-text">Vence: Branding Identidad — 3°A</div><div class="card-row-sub">23:59 · 28 estudiantes</div></div><span class="tag to">Entrega</span></div>
+      <div class="card-row"><div class="dot do"></div><div style="flex:1;"><div class="card-row-text">Vence: Composición Visual — 3°B</div><div class="card-row-sub">23:59 · 24 estudiantes</div></div><span class="tag to">Entrega</span></div>
+    </div>
+    <div class="section-label">Esta semana</div>
+    <div class="card">
+      <div class="card-row"><div class="dot dg"></div><div style="flex:1;"><div class="card-row-text">Clase 3°A — Retroalimentación Branding</div><div class="card-row-sub">Vie 2 mayo · 10:00 AM · Sala 204</div></div><span class="tag tg">Clase</span></div>
+      <div class="card-row"><div class="dot dg"></div><div style="flex:1;"><div class="card-row-text">Clase 3°B — Taller Composición</div><div class="card-row-sub">Vie 2 mayo · 14:00 · Sala 204</div></div><span class="tag tg">Clase</span></div>
+    </div>
+    <div class="section-label">Próximos vencimientos</div>
+    <div class="card">
+      <div class="card-row"><div class="dot db"></div><div style="flex:1;"><div class="card-row-text">Tipografía Editorial — 3°A</div><div class="card-row-sub">Jue 8 mayo · 23:59</div></div><span class="tag tb">En curso</span></div>
+      <div class="card-row"><div class="dot db"></div><div style="flex:1;"><div class="card-row-text">Rediseño Marca Personal — 3°A y 3°B</div><div class="card-row-sub">Jue 15 mayo · 23:59</div></div><span class="tag tb">En curso</span></div>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <div class="nav-item" data-goto="s-dash-tch"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+    <div class="nav-item" data-goto="s-trabajos-tch"><div class="nav-icon"></div><span class="nav-label">Trabajos</span></div>
+    <div class="nav-item" data-goto="s-tareas-tch"><div class="nav-icon"></div><span class="nav-label">Tareas</span></div>
+    <div class="nav-item" data-goto="s-dudas-tch"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+    <div class="nav-item on" data-goto="s-cal-tch"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Agenda</span></div>
+  </div>
+</div>
+
+<!-- PERFIL PROFE -->
+<div class="screen" id="s-profile-tch">
+  <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+  <div class="top-bar"><div style="display:flex;align-items:center;gap:10px;"><span data-goto="s-dash-tch" style="color:#fff;font-size:22px;">‹</span><div><h2>Mi perfil</h2></div></div></div>
+  <div class="content">
+    <div class="card" style="text-align:center;padding:22px;">
+      <div class="avatar ag" style="width:62px;height:62px;font-size:20px;margin:0 auto 12px;">PV</div>
+      <div style="font-size:17px;font-weight:800;color:#212121;">Pamela Villafaena</div>
+      <div style="font-size:12px;color:#9e9e9e;margin-top:3px;">Profesora de Diseño · Liceo Artístico</div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;"><span class="tag tb">Modo Profesora</span><span class="tag tg">Diseño</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mis cursos</div>
+      <div class="card-row"><div class="dot db"></div><div class="card-row-text">3°A Diseño — 28 estudiantes</div><span class="tag tb">Activo</span></div>
+      <div class="card-row"><div class="dot dg"></div><div class="card-row-text">3°B Diseño — 24 estudiantes</div><span class="tag tg">Activo</span></div>
+      <div class="card-row"><div class="dot" style="background:#bdbdbd;"></div><div class="card-row-text">2°A Diseño — 26 estudiantes</div><span class="tag" style="background:#f5f5f5;color:#9e9e9e;">2° sem</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Configuración</div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Notificaciones de dudas</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Recordatorio de entregas</span><div class="toggle"></div></div>
+      <div class="toggle-row"><span style="font-size:13px;color:#212121;">Resumen semanal</span><div class="toggle off"></div></div>
+    </div>
+    <button class="btn bo" data-goto="s-role" style="margin-bottom:10px;">Cambiar rol</button>
+    <button class="btn" style="background:#FFEBEE;color:#C62828;border:none;" data-goto="s-splash">Cerrar sesión</button>
+  </div>
+</div>
+
+</div><!-- /phone-frame -->
+
+<script>
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  var t = document.getElementById(id);
+  if (t) {
+    t.classList.add('active');
+    t.scrollTop = 0;
+    // scroll content area to top
+    var c = t.querySelector('.content');
+    if (c) c.scrollTop = 0;
+  }
+}
+
+function handleTap(e) {
+  // prevent ghost click on touchend
+  if (e.type === 'touchend') e.preventDefault();
+
+  // Role selection
+  var roleEl = e.target.closest('[data-role]');
+  if (roleEl) {
+    var role = roleEl.getAttribute('data-role');
+    goTo(role === 'teacher' ? 's-dash-tch' : 's-dash-stu');
+    return;
+  }
+
+  // Navigation
+  var gotoEl = e.target.closest('[data-goto]');
+  if (gotoEl) {
+    goTo(gotoEl.getAttribute('data-goto'));
+    return;
+  }
+
+  // Stars for teacher feedback
+  var star = e.target.closest('[data-star]');
+  if (star) {
+    var n = parseInt(star.getAttribute('data-star'));
+    document.querySelectorAll('[data-star]').forEach(function(s){
+      s.style.color = parseInt(s.getAttribute('data-star')) <= n ? '#FFC107' : '#e0e0e0';
+    });
+    var labels = ['','Insuficiente','Suficiente','Bueno','Muy bueno','Excelente'];
+    var lbl = document.getElementById('star-label-tch');
+    if (lbl) lbl.textContent = n + '/5 · ' + labels[n];
+    return;
+  }
+}
+
+// Use touchend for iOS, click as fallback for desktop
+document.addEventListener('touchend', handleTap, {passive: false});
+document.addEventListener('click', handleTap);
+</script>
+</body>
+</html>
