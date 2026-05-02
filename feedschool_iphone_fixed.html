@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-title" content="FeedSchool">
+  <title>FeedSchool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; cursor: pointer; touch-action: manipulation; font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+  html { width: 100%; height: 100%; overflow: hidden; background: #fff !important; }
+  body { width: 100%; height: 100%; overflow: hidden; background: #fff; }
+  .phone-frame {
+    width: 100vw; height: 100vh;
+    background: #f5f5f5;
+    overflow: hidden; position: fixed; top: 0; left: 0;
+  }
+  .screen { width: 100%; height: 100%; background: #fff; position: absolute; top: 0; left: 0; display: none; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; }
+  .status-bar { background: #1565C0; height: 44px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 16px 8px; gap: 6px; flex-shrink: 0; padding-top: env(safe-area-inset-top, 20px); }
+  .status-bar span { color: #fff; font-size: 12px; }
+  .top-bar { background: #1565C0; padding: 12px 18px 14px; flex-shrink: 0; }
+  .top-bar h2 { color: #fff; font-size: 18px; font-weight: 600; }
+  .top-bar p { color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 2px; }
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; background: #F8F9FA; }
+  .nav-bar { height: 60px; background: #fff; border-top: 0.5px solid #e0e0e0; display: flex; align-items: center; justify-content: space-around; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 8px 10px; border-radius: 10px; }
+  .nav-item.active .nav-icon { background: #1565C0; }
+  .nav-item.active .nav-label { color: #1565C0; font-weight: 600; }
+  .nav-icon { width: 26px; height: 26px; border-radius: 7px; background: #bdbdbd; }
+  .nav-label { font-size: 10px; color: #9e9e9e; }
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; border: 0.5px solid #e0e0e0; }
+  .card-title { font-size: 13px; font-weight: 600; color: #1565C0; margin-bottom: 8px; }
+  .card-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .card-row:last-child { border-bottom: none; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot-blue { background: #1565C0; }
+  .dot-green { background: #558B2F; }
+  .dot-orange { background: #E65100; }
+  .card-row-text { font-size: 13px; color: #212121; flex: 1; }
+  .card-row-sub { font-size: 11px; color: #9e9e9e; }
+  .tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .tag-blue { background: #E3F2FD; color: #1565C0; }
+  .tag-green { background: #F1F8E9; color: #558B2F; }
+  .tag-orange { background: #FFF3E0; color: #E65100; }
+  .btn { display: block; width: 100%; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; cursor: pointer; border: none; }
+  .btn-primary { background: #1565C0; color: #fff; }
+  .btn-outline { background: transparent; border: 1.5px solid #1565C0; color: #1565C0; }
+  .input-field { width: 100%; padding: 12px 14px; border-radius: 10px; border: 0.5px solid #e0e0e0; font-size: 14px; background: #F8F9FA; color: #212121; margin-bottom: 10px; -webkit-appearance: none; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .av-blue { background: #E3F2FD; color: #1565C0; }
+  .av-green { background: #F1F8E9; color: #558B2F; }
+  .av-orange { background: #FFF3E0; color: #E65100; }
+  .msg-bubble { padding: 10px 13px; border-radius: 14px; font-size: 13px; max-width: 80%; line-height: 1.5; color: #212121; }
+  .msg-in { background: #F0F0F0; border-bottom-left-radius: 3px; }
+  .msg-out { background: #1565C0; color: #fff; border-bottom-right-radius: 3px; align-self: flex-end; }
+  .msg-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+  .msg-row.out { flex-direction: row-reverse; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+  .cal-day-name { font-size: 11px; color: #9e9e9e; padding: 4px 0; }
+  .cal-day { font-size: 13px; padding: 7px 2px; border-radius: 8px; cursor: pointer; color: #212121; }
+  .cal-day.today { background: #1565C0; color: #fff; font-weight: 600; border-radius: 50%; }
+  .cal-day.has-event { position: relative; }
+  .cal-day.has-event::after { content: ''; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #E65100; }
+  .section-label { font-size: 12px; font-weight: 600; color: #9e9e9e; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 8px; }
+  .notif-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .notif-dot { width: 9px; height: 9px; border-radius: 50%; background: #1565C0; margin-top: 4px; flex-shrink: 0; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid #f0f0f0; }
+  .toggle { width: 40px; height: 22px; border-radius: 11px; background: #1565C0; position: relative; cursor: pointer; }
+  .toggle::after { content: ''; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .logo-text { font-size: 22px; font-weight: 800; }
+  .logo-text span { color: #1565C0; }
+  .logo-text em { color: #558B2F; font-style: normal; }
+  .splash-sub { font-size: 13px; color: #9e9e9e; margin-top: 4px; }
+  .role-btn { width: 100%; padding: 16px; border-radius: 14px; margin-bottom: 12px; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 14px; }
+  .role-btn:active { background: #f0f0f0; }
+  .role-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .user-mode { font-size: 11px; color: #fff; background: #1565C0; border-radius: 4px; padding: 3px 8px; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+    <!-- SPLASH / LOGIN -->
+    <div class="screen active" id="screen-splash">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px; background:#fff;">
+        <div style="margin-bottom:18px;">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="34" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.5"/>
+            <ellipse cx="36" cy="42" rx="22" ry="10" fill="#1565C0" opacity="0.15"/>
+            <rect x="20" y="28" width="32" height="20" rx="4" fill="#fff" stroke="#1565C0" stroke-width="1.5"/>
+            <rect x="24" y="32" width="24" height="3" rx="1.5" fill="#1565C0" opacity="0.5"/>
+            <rect x="24" y="37" width="16" height="3" rx="1.5" fill="#558B2F" opacity="0.7"/>
+            <polygon points="36,14 42,24 30,24" fill="#E65100"/>
+            <circle cx="36" cy="13" r="4" fill="#E65100"/>
+            <rect x="34" y="20" width="4" height="6" fill="#E65100"/>
+          </svg>
+        </div>
+        <div class="logo-text"><span>Feed</span><em>School</em></div>
+        <div class="splash-sub">Work smarter, be the master</div>
+        <div style="margin: 32px 0 16px; width:100%;">
+          <input class="input-field" placeholder="Correo electr&#243;nico" type="email" style="margin-bottom:10px;"/>
+          <input class="input-field" placeholder="Contrase&#241;a" type="password"/>
+        </div>
+        <button class="btn btn-primary" data-goto="screen-role" style="margin-bottom:10px;">Iniciar sesi&#243;n</button>
+        <div style="font-size:11px; color:#9e9e9e;">&#191;No tienes cuenta? <span style="color:#1565C0; cursor:pointer;">Reg&#237;strate</span></div>
+      </div>
+    </div>
+
+    <!-- ROLE SELECT -->
+    <div class="screen" id="screen-role">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div style="flex:1; display:flex; flex-direction:column; padding:24px; background:#F8F9FA;">
+        <div style="margin-bottom:24px; text-align:center;">
+          <div class="logo-text" style="font-size:16px;"><span>Feed</span><em>School</em></div>
+          <div style="font-size:12px; color:#9e9e9e; margin-top:4px;">&#191;C&#243;mo quieres ingresar?</div>
+        </div>
+        <button class="role-btn" data-role="student">
+          <div class="role-icon" style="background:#E3F2FD;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="8" width="14" height="10" rx="2" fill="#1565C0" opacity="0.3"/><polygon points="11,3 18,8 4,8" fill="#1565C0"/><rect x="9" y="14" width="4" height="4" rx="1" fill="#1565C0"/></svg>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:13px; font-weight:500; color:#212121;">Soy Estudiante</div>
+            <div style="font-size:11px; color:#9e9e9e;">Ver tareas, dudas y calendario</div>
+          </div>
+        </button>
+        <button class="role-btn" data-role="teacher">
+          <div class="role-icon" style="background:#F1F8E9;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><rect x="3" y="5" width="16" height="12" rx="2" fill="#558B2F" opacity="0.3"/><rect x="6" y="8" width="10" height="2" rx="1" fill="#558B2F"/><rect x="6" y="12" width="6" height="2" rx="1" fill="#558B2F"/><circle cx="17" cy="16" r="3" fill="#558B2F"/><path d="M16 16h2M17 15v2" stroke="#fff" stroke-width="1.2"/></svg>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:13px; font-weight:500; color:#212121;">Soy Profesor/a</div>
+            <div style="font-size:11px; color:#9e9e9e;">Dar feedback y responder dudas</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="screen" id="screen-dashboard">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar" style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <h2 id="dash-greeting">Hola, Pedro &#128075;</h2>
+          <p>Jueves, 30 de abril</p>
+        </div>
+        <div data-goto="screen-profile" style="cursor:pointer;">
+          <div class="avatar av-blue" style="width:34px;height:34px;font-size:12px;" id="dash-avatar">PG</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card" style="border-left: 3px solid #1565C0; cursor:pointer;" data-goto="screen-calendar">
+          <div class="card-title">Pr&#243;ximas tareas</div>
+          <div class="card-row">
+            <div class="dot dot-orange"></div>
+            <div style="flex:1;">
+              <div class="card-row-text">Historia &#8212; Proyecto Civil War</div>
+              <div class="card-row-sub">Hoy 9:00 AM</div>
+            </div>
+            <span class="tag tag-orange">Urgente</span>
+          </div>
+          <div class="card-row">
+            <div class="dot dot-blue"></div>
+            <div style="flex:1;">
+              <div class="card-row-text">Matem&#225;ticas &#8212; Tarea #4</div>
+              <div class="card-row-sub">Ma&#241;ana 6:00 PM</div>
+            </div>
+            <span class="tag tag-blue">Pendiente</span>
+          </div>
+          <div class="card-row">
+            <div class="dot dot-green"></div>
+            <div style="flex:1;">
+              <div class="card-row-text">Biolog&#237;a &#8212; Informe</div>
+              <div class="card-row-sub">Vie 8:00 AM</div>
+            </div>
+            <span class="tag tag-green">A tiempo</span>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div class="card" style="cursor:pointer; padding:12px;" data-goto="screen-doubts">
+            <div style="font-size:20px; margin-bottom:6px;">
+              <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="#E3F2FD"/><text x="11" y="15" text-anchor="middle" font-size="11" fill="#1565C0" font-weight="500">?</text></svg>
+            </div>
+            <div style="font-size:11px; font-weight:500; color:#212121;">Dudas</div>
+            <div style="font-size:10px; color:#9e9e9e;">3 sin responder</div>
+          </div>
+          <div class="card" style="cursor:pointer; padding:12px;" data-goto="screen-feedback">
+            <div style="font-size:20px; margin-bottom:6px;">
+              <svg width="22" height="22" viewBox="0 0 22 22"><rect x="3" y="5" width="16" height="12" rx="2" fill="#F1F8E9"/><path d="M7 9h8M7 12h5" stroke="#558B2F" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div style="font-size:11px; font-weight:500; color:#212121;">Feedback</div>
+            <div style="font-size:10px; color:#9e9e9e;">2 proyectos</div>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer;" data-goto="screen-notifs">
+          <div class="card-title">Notificaciones recientes</div>
+          <div class="card-row">
+            <div class="avatar av-green" style="width:26px;height:26px;font-size:9px;">FM</div>
+            <div style="flex:1;">
+              <div class="card-row-text">Prof. Fernanda respondi&#243; tu duda</div>
+              <div class="card-row-sub">Hace 5 min</div>
+            </div>
+          </div>
+          <div class="card-row">
+            <div class="avatar av-orange" style="width:26px;height:26px;font-size:9px;">JM</div>
+            <div style="flex:1;">
+              <div class="card-row-text">Prof. Mazuret subi&#243; feedback</div>
+              <div class="card-row-sub">Hace 1 hora</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-item active" data-goto="screen-dashboard"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Inicio</span></div>
+        <div class="nav-item" data-goto="screen-calendar"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+        <div class="nav-item" data-goto="screen-doubts"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+        <div class="nav-item" data-goto="screen-feedback"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+        <div class="nav-item" data-goto="screen-notifs"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="screen" id="screen-calendar">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span data-goto="screen-dashboard" style="color:#fff;cursor:pointer;font-size:18px;">&#8249;</span>
+          <div><h2>Calendario</h2><p>Mayo 2024</p></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="cal-grid">
+            <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">X</div><div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
+            <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day has-event">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+            <div class="cal-day">6</div><div class="cal-day has-event">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day has-event">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+            <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day has-event">15</div><div class="cal-day has-event">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day">19</div>
+            <div class="cal-day today">20</div><div class="cal-day has-event">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day has-event">24</div><div class="cal-day">25</div><div class="cal-day">26</div>
+            <div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day has-event">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div class="cal-day"></div><div class="cal-day"></div>
+          </div>
+        </div>
+        <div class="section-label">Hoy &#8212; 20 Mayo</div>
+        <div class="card">
+          <div class="card-row"><div class="dot dot-orange"></div><div style="flex:1;"><div class="card-row-text">Historia &#8212; Proyecto Civil War</div><div class="card-row-sub">9:00 AM &#183; Prof. Mazuret</div></div><span class="tag tag-orange">Entregar</span></div>
+        </div>
+        <div class="section-label">Esta semana</div>
+        <div class="card">
+          <div class="card-row"><div class="dot dot-blue"></div><div style="flex:1;"><div class="card-row-text">Matem&#225;ticas &#8212; Tarea #4</div><div class="card-row-sub">21 Mayo &#183; 6:00 PM</div></div><span class="tag tag-blue">Pendiente</span></div>
+          <div class="card-row"><div class="dot dot-green"></div><div style="flex:1;"><div class="card-row-text">Biolog&#237;a &#8212; Informe mitosis</div><div class="card-row-sub">24 Mayo &#183; 8:00 AM</div></div><span class="tag tag-green">A tiempo</span></div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-item" data-goto="screen-dashboard"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+        <div class="nav-item active" data-goto="screen-calendar"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Calendario</span></div>
+        <div class="nav-item" data-goto="screen-doubts"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+        <div class="nav-item" data-goto="screen-feedback"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+        <div class="nav-item" data-goto="screen-notifs"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+      </div>
+    </div>
+
+    <!-- DOUBTS -->
+    <div class="screen" id="screen-doubts">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span data-goto="screen-dashboard" style="color:#fff;cursor:pointer;font-size:18px;">&#8249;</span>
+          <div><h2>Resoluci&#243;n de dudas</h2><p>Pregunta a tus profesores</p></div>
+        </div>
+      </div>
+      <div class="content" style="display:flex;flex-direction:column;gap:0;">
+        <div class="msg-row">
+          <div class="avatar av-green" style="width:28px;height:28px;font-size:9px;">FM</div>
+          <div><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;">Prof. Fernanda &#183; Biolog&#237;a</div><div class="msg-bubble msg-in">Recuerda que la mitosis tiene 4 fases: profase, metafase, anafase y telofase.</div></div>
+        </div>
+        <div class="msg-row out">
+          <div class="avatar av-blue" style="width:28px;height:28px;font-size:9px;">PG</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;"><div style="font-size:9px;color:#9e9e9e;margin-bottom:3px;text-align:right;">T&#250;</div><div class="msg-bubble msg-out">&#191;Cu&#225;l es la diferencia entre mitosis y meiosis?</div></div>
+        </div>
+        <div class="msg-row">
+          <div class="avatar av-green" style="width:28px;height:28px;font-size:9px;">FM</div>
+          <div><div class="msg-bubble msg-in">La mitosis produce 2 c&#233;lulas id&#233;nticas (diploide), la meiosis produce 4 c&#233;lulas gen&#233;ticamente distintas (haploide).</div></div>
+        </div>
+        <div class="msg-row out">
+          <div class="avatar av-blue" style="width:28px;height:28px;font-size:9px;">PG</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;"><div class="msg-bubble msg-out">&#191;Puedes explicar la fotos&#237;ntesis? #biolog&#237;a</div></div>
+        </div>
+        <div class="msg-row">
+          <div class="avatar av-green" style="width:28px;height:28px;font-size:9px;">FM</div>
+          <div><div class="msg-bubble msg-in" style="background:#E3F2FD;color:#1565C0;">Respondiendo... &#9998;</div></div>
+        </div>
+      </div>
+      <div style="padding:10px 14px; background:#fff; border-top:0.5px solid #e0e0e0; display:flex; gap:8px; flex-shrink:0;">
+        <input class="input-field" placeholder="Escribe tu duda..." style="flex:1;margin-bottom:0;"/>
+        <button style="background:#1565C0;border:none;border-radius:8px;padding:0 12px;color:#fff;font-size:14px;cursor:pointer;">&#8594;</button>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-item" data-goto="screen-dashboard"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+        <div class="nav-item" data-goto="screen-calendar"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+        <div class="nav-item active" data-goto="screen-doubts"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Dudas</span></div>
+        <div class="nav-item" data-goto="screen-feedback"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+        <div class="nav-item" data-goto="screen-notifs"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK -->
+    <div class="screen" id="screen-feedback">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span data-goto="screen-dashboard" style="color:#fff;cursor:pointer;font-size:18px;">&#8249;</span>
+          <div><h2>Feedback de proyectos</h2><p>Sube tu trabajo y recibe retroalimentaci&#243;n</p></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Historia &#8212; Proyecto Civil War</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:6px;background:#F8F9FA;border-radius:8px;padding:6px 10px;font-size:11px;color:#555;border:0.5px solid #e0e0e0;flex:1;">
+              <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="1" width="10" height="12" rx="1.5" fill="#E3F2FD" stroke="#1565C0" stroke-width="1"/><rect x="4" y="4" width="6" height="1.5" rx="0.75" fill="#1565C0" opacity="0.6"/><rect x="4" y="7" width="4" height="1.5" rx="0.75" fill="#1565C0" opacity="0.4"/></svg>
+              Research_Paper.pdf
+            </div>
+          </div>
+          <div style="background:#F1F8E9;border-radius:8px;padding:10px;border-left:3px solid #558B2F;">
+            <div style="font-size:10px;color:#558B2F;font-weight:500;margin-bottom:4px;">Feedback de Prof. Mazuret</div>
+            <div style="font-size:11px;color:#212121;line-height:1.5;">&#161;Gran trabajo! Por favor prov&#233;e m&#225;s detalles sobre la secci&#243;n de la Guerra Civil. Las fuentes son buenas pero necesitas expandir el an&#225;lisis.</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <span class="tag tag-green">Historia</span>
+            <span class="tag tag-orange">Revisar</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Matem&#225;ticas &#8212; Tarea #4</div>
+          <div style="background:#FFF3E0;border-radius:8px;padding:10px;border-left:3px solid #E65100;margin-bottom:8px;">
+            <div style="font-size:10px;color:#E65100;font-weight:500;margin-bottom:4px;">Pendiente de entrega</div>
+            <div style="font-size:11px;color:#212121;">A&#250;n no has subido este proyecto.</div>
+          </div>
+          <button class="btn btn-outline" style="font-size:12px;padding:8px;">Subir archivo</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-item" data-goto="screen-dashboard"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+        <div class="nav-item" data-goto="screen-calendar"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+        <div class="nav-item" data-goto="screen-doubts"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+        <div class="nav-item active" data-goto="screen-feedback"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Feedback</span></div>
+        <div class="nav-item" data-goto="screen-notifs"><div class="nav-icon"></div><span class="nav-label">Avisos</span></div>
+      </div>
+    </div>
+
+    <!-- NOTIFS -->
+    <div class="screen" id="screen-notifs">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span data-goto="screen-dashboard" style="color:#fff;cursor:pointer;font-size:18px;">&#8249;</span>
+          <div><h2>Notificaciones</h2><p>3 nuevas</p></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="section-label">Hoy</div>
+        <div class="card">
+          <div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:12px;font-weight:500;color:#212121;">Prof. Fernanda respondi&#243; tu duda</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Hace 5 min &#183; Biolog&#237;a</div></div></div>
+          <div class="notif-item"><div class="notif-dot" style="background:#558B2F;"></div><div><div style="font-size:12px;font-weight:500;color:#212121;">Prof. Mazuret subi&#243; feedback</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Hace 1 hora &#183; Historia</div></div></div>
+          <div class="notif-item" style="border-bottom:none;"><div class="notif-dot" style="background:#E65100;"></div><div><div style="font-size:12px;font-weight:500;color:#212121;">Tarea de Historia vence hoy</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">9:00 AM &#183; &#161;No olvides entregar!</div></div></div>
+        </div>
+        <div class="section-label">Ayer</div>
+        <div class="card">
+          <div class="notif-item" style="border-bottom:none;"><div class="notif-dot" style="background:#bdbdbd;"></div><div><div style="font-size:12px;font-weight:500;color:#212121;">Nueva tarea asignada: Biolog&#237;a</div><div style="font-size:11px;color:#9e9e9e;margin-top:2px;">Ayer 3:00 PM &#183; Prof. Fernanda</div></div></div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="nav-item" data-goto="screen-dashboard"><div class="nav-icon"></div><span class="nav-label">Inicio</span></div>
+        <div class="nav-item" data-goto="screen-calendar"><div class="nav-icon"></div><span class="nav-label">Calendario</span></div>
+        <div class="nav-item" data-goto="screen-doubts"><div class="nav-icon"></div><span class="nav-label">Dudas</span></div>
+        <div class="nav-item" data-goto="screen-feedback"><div class="nav-icon"></div><span class="nav-label">Feedback</span></div>
+        <div class="nav-item active" data-goto="screen-notifs"><div class="nav-icon" style="background:#1565C0;"></div><span class="nav-label" style="color:#1565C0;">Avisos</span></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="screen" id="screen-profile">
+      <div class="status-bar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+      <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span data-goto="screen-dashboard" style="color:#fff;cursor:pointer;font-size:18px;">&#8249;</span>
+          <div><h2>Perfil</h2></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card" style="text-align:center;padding:20px;">
+          <div class="avatar av-blue" id="profile-avatar" style="width:56px;height:56px;font-size:18px;margin:0 auto 10px;">PG</div>
+          <div style="font-size:15px;font-weight:500;color:#212121;" id="profile-name">Pedro Gonz&#225;lez</div>
+          <div style="font-size:12px;color:#9e9e9e;margin-top:3px;" id="profile-role-label">Estudiante &#183; A&#241;o 9B</div>
+          <div style="margin-top:10px;"><span class="tag tag-blue" id="profile-mode-tag">Modo Estudiante</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Configuraci&#243;n</div>
+          <div class="toggle-row"><span style="font-size:12px;color:#212121;">Notificaciones</span><div class="toggle"></div></div>
+          <div class="toggle-row"><span style="font-size:12px;color:#212121;">Modo oscuro</span><div class="toggle" style="background:#e0e0e0;"><div style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;"></div></div></div>
+          <div class="toggle-row" style="border-bottom:none;"><span style="font-size:12px;color:#212121;">Recordatorios de tareas</span><div class="toggle"></div></div>
+        </div>
+        <button class="btn btn-outline" data-goto="screen-role" style="margin-top:4px;">Cambiar tipo de usuario</button>
+        <button class="btn" style="margin-top:10px;background:#FFEBEE;color:#C62828;border:none;" data-goto="screen-splash">Cerrar sesi&#243;n</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  var t = document.getElementById(id);
+  if (t) {
+    t.classList.add('active');
+    var c = t.querySelector('.content');
+    if (c) c.scrollTop = 0;
+  }
+}
+
+var lastTouch = 0;
+function handleInteraction(e) {
+  if (e.type === 'touchend') {
+    lastTouch = Date.now();
+    e.preventDefault();
+  } else if (e.type === 'click') {
+    if (Date.now() - lastTouch < 500) return;
+  }
+
+  var roleEl = e.target.closest('[data-role]');
+  if (roleEl) {
+    goTo(roleEl.getAttribute('data-role') === 'teacher' ? 's-dash-tch' : 's-dash-stu');
+    return;
+  }
+
+  var gotoEl = e.target.closest('[data-goto]');
+  if (gotoEl) { goTo(gotoEl.getAttribute('data-goto')); return; }
+
+  var star = e.target.closest('[data-star]');
+  if (star) {
+    var n = parseInt(star.getAttribute('data-star'));
+    document.querySelectorAll('[data-star]').forEach(function(s){
+      s.style.color = parseInt(s.getAttribute('data-star')) <= n ? '#FFC107' : '#e0e0e0';
+    });
+    var labels = ['','Insuficiente','Suficiente','Bueno','Muy bueno','Excelente'];
+    var lbl = document.getElementById('star-label-tch');
+    if (lbl) lbl.textContent = n + '/5 · ' + labels[n];
+    return;
+  }
+
+  var tab = e.target.closest('.pill-tab');
+  if (tab) {
+    tab.closest('.pill-tabs').querySelectorAll('.pill-tab').forEach(function(t){ t.classList.remove('on'); t.classList.remove('active'); });
+    tab.classList.add('on'); tab.classList.add('active');
+    return;
+  }
+
+  var toggle = e.target.closest('.toggle');
+  if (toggle) { toggle.classList.toggle('off'); return; }
+}
+
+document.addEventListener('touchend', handleInteraction, {passive: false});
+document.addEventListener('click', handleInteraction);
+
+document.addEventListener('touchend', function(e) {
+  var input = e.target.closest('input, textarea');
+  if (input) { setTimeout(function(){ input.focus(); }, 50); }
+}, {passive: true});
+</script>
+</body>
+</html>
