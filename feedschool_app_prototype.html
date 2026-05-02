@@ -1,0 +1,533 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+
+  :root {
+    --blue: #2563EB;
+    --blue-light: #EFF6FF;
+    --blue-mid: #BFDBFE;
+    --green: #16A34A;
+    --green-light: #F0FDF4;
+    --green-mid: #BBF7D0;
+    --orange: #D97706;
+    --orange-light: #FFFBEB;
+    --orange-mid: #FDE68A;
+    --gray: #6B7280;
+    --gray-light: #F9FAFB;
+    --white: #FFFFFF;
+    --text: #111827;
+    --text-muted: #6B7280;
+    --border: rgba(0,0,0,0.08);
+  }
+
+  body { font-family: 'Nunito', sans-serif; }
+
+  .phone-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  .phone {
+    width: 340px;
+    min-height: 640px;
+    background: var(--white);
+    border-radius: 36px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+
+  .status-bar {
+    background: var(--blue);
+    padding: 10px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-bar span { color: white; font-size: 11px; font-weight: 600; }
+
+  .header {
+    background: var(--blue);
+    padding: 12px 18px 16px;
+    color: white;
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .header h2 { font-size: 17px; font-weight: 700; }
+  .header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: white; }
+
+  .content { flex: 1; overflow-y: auto; padding: 14px 14px 80px; background: var(--gray-light); }
+
+  .nav-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    padding: 6px 0 10px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: opacity 0.15s;
+  }
+  .nav-item .nav-icon { font-size: 18px; }
+  .nav-item .nav-label { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .nav-item.active .nav-label { color: var(--blue); }
+  .nav-item.active .nav-icon { filter: none; }
+
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 0.5px solid var(--border);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 14px 0 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat-card {
+    background: var(--white);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .task-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .task-due { font-size: 11px; color: var(--text-muted); }
+
+  .mini-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day { text-align: center; padding: 5px 2px; font-size: 11px; border-radius: 6px; cursor: pointer; }
+  .cal-day.header { font-weight: 700; color: var(--text-muted); font-size: 10px; }
+  .cal-day.today { background: var(--blue); color: white; font-weight: 700; }
+  .cal-day.has-task { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+  .cal-day.other { color: var(--text-muted); }
+
+  .doubt-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .doubt-item:last-child { border-bottom: none; }
+  .doubt-q { font-size: 13px; font-weight: 600; }
+  .doubt-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+  .doubt-answer { font-size: 12px; color: var(--text-muted); margin-top: 2px; padding: 6px 10px; background: var(--green-light); border-radius: 8px; border-left: 2px solid var(--green); }
+
+  .msg-bubble {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .msg-student { background: var(--blue); color: white; border-bottom-right-radius: 4px; align-self: flex-end; margin-left: auto; }
+  .msg-teacher { background: var(--white); border: 0.5px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg-time { font-size: 10px; color: var(--text-muted); text-align: right; margin-bottom: 10px; }
+
+  .feed-item { padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .feed-subject { font-size: 13px; font-weight: 700; }
+  .feed-grade { font-size: 16px; font-weight: 700; color: var(--green); }
+  .feed-comment { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .feed-bar { height: 5px; background: var(--green-mid); border-radius: 99px; margin-top: 6px; }
+  .feed-bar-fill { height: 100%; background: var(--green); border-radius: 99px; }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--white);
+    border-top: 0.5px solid var(--border);
+    position: absolute;
+    bottom: 60px; left: 0; right: 0;
+  }
+  .input-box {
+    flex: 1;
+    background: var(--gray-light);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+  }
+  .send-btn {
+    width: 34px; height: 34px;
+    background: var(--blue);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .hidden { display: none; }
+  .view { display: flex; flex-direction: column; height: 100%; }
+</style>
+
+<div class="phone-wrap">
+  <div class="phone">
+
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>FeedSchool</span>
+      <span>●●●</span>
+    </div>
+
+    <div id="view-dashboard" class="view">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <h2>¡Hola, Pedro! 👋</h2>
+            <p>Miércoles, 30 de abril</p>
+          </div>
+          <div class="avatar">PR</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--blue)">3</div>
+            <div class="stat-label">Tareas hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--orange)">2</div>
+            <div class="stat-label">Dudas pendientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--green)">5</div>
+            <div class="stat-label">Feedbacks nuevos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--text)">12</div>
+            <div class="stat-label">Días al parcial</div>
+          </div>
+        </div>
+
+        <div class="section-title">Próximas entregas</div>
+        <div class="card">
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--orange)"></div>
+            <div style="flex:1">
+              <div class="task-name">Historia — Ensayo Civil War</div>
+              <div class="task-due">Hoy · 9:00 AM</div>
+            </div>
+            <span class="badge badge-orange">Urgente</span>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--blue)"></div>
+            <div style="flex:1">
+              <div class="task-name">Matemáticas — Homework</div>
+              <div class="task-due">Mañana · 8:30 AM</div>
+            </div>
+            <span class="badge badge-blue">Pendiente</span>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--green)"></div>
+            <div style="flex:1">
+              <div class="task-name">Biología — Presentación</div>
+              <div class="task-due">Viernes · 11:00 AM</div>
+            </div>
+            <span class="badge badge-green">En proceso</span>
+          </div>
+        </div>
+
+        <div class="section-title">Actividad reciente</div>
+        <div class="card">
+          <div class="task-item">
+            <div style="font-size:16px">💬</div>
+            <div style="flex:1">
+              <div class="task-name">Nueva duda respondida</div>
+              <div class="task-due">Prof. Rojas · Biología · hace 5 min</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div style="font-size:16px">📋</div>
+            <div style="flex:1">
+              <div class="task-name">Feedback recibido</div>
+              <div class="task-due">History Project · Prof. Mazuret</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-calendar" class="view hidden">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <h2>Calendario</h2>
+            <p>Mayo 2024</p>
+          </div>
+          <span style="color:white;font-size:18px;cursor:pointer">+</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="mini-cal">
+            <div class="cal-day header">L</div><div class="cal-day header">M</div><div class="cal-day header">X</div><div class="cal-day header">J</div><div class="cal-day header">V</div><div class="cal-day header">S</div><div class="cal-day header">D</div>
+            <div class="cal-day other"></div><div class="cal-day other"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day has-task">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+            <div class="cal-day">6</div><div class="cal-day has-task">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day has-task">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+            <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div><div class="cal-day has-task">17</div><div class="cal-day">18</div><div class="cal-day">19</div>
+            <div class="cal-day today">20</div><div class="cal-day">21</div><div class="cal-day has-task">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day">25</div><div class="cal-day">26</div>
+            <div class="cal-day">27</div><div class="cal-day has-task">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div class="cal-day other"></div><div class="cal-day other"></div>
+          </div>
+        </div>
+
+        <div class="section-title">Tareas del mes</div>
+        <div class="card">
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--orange)"></div>
+            <div style="flex:1">
+              <div class="task-name">Historia · Ensayo Civil War</div>
+              <div class="task-due">3 mayo · Prof. Mazuret</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--blue)"></div>
+            <div style="flex:1">
+              <div class="task-name">Matemáticas · Guía integral</div>
+              <div class="task-due">7 mayo · Prof. García</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--blue)"></div>
+            <div style="flex:1">
+              <div class="task-name">Ciencias · Lab Report</div>
+              <div class="task-due">10 mayo · Prof. Rojas</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--orange)"></div>
+            <div style="flex:1">
+              <div class="task-name">Inglés · Essay draft</div>
+              <div class="task-due">17 mayo · Prof. Smith</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--green)"></div>
+            <div style="flex:1">
+              <div class="task-name">Biología · Presentación</div>
+              <div class="task-due">22 mayo · Prof. Rojas</div>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="task-dot" style="background:var(--orange)"></div>
+            <div style="flex:1">
+              <div class="task-name">Historia · Prueba parcial</div>
+              <div class="task-due">28 mayo · Prof. Mazuret</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-doubts" class="view hidden">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <h2>Resolución de dudas</h2>
+            <p>Pregunta a tus profes</p>
+          </div>
+          <span style="color:white;font-size:18px;cursor:pointer">+</span>
+        </div>
+      </div>
+      <div style="flex:1; overflow-y:auto; padding: 14px 14px 130px; background:var(--gray-light);">
+        <div class="section-title">Recientes</div>
+        <div class="card">
+          <div class="doubt-item">
+            <div class="doubt-q">¿Cuál es la diferencia entre mitosis y meiosis?</div>
+            <div class="doubt-meta">
+              <span class="badge badge-blue">Biología</span>
+              <span>hace 5 min</span>
+            </div>
+            <div class="doubt-answer">La mitosis produce 2 células idénticas, la meiosis produce 4 células con la mitad del material genético. — Prof. Rojas</div>
+          </div>
+          <div class="doubt-item">
+            <div class="doubt-q">¿Cómo se puede explicar la fotosíntesis?</div>
+            <div class="doubt-meta">
+              <span class="badge badge-green">Ciencias</span>
+              <span>hace 2 horas</span>
+            </div>
+            <div class="doubt-answer">La fotosíntesis convierte luz solar + CO₂ + agua en glucosa + oxígeno. — Prof. García</div>
+          </div>
+          <div class="doubt-item">
+            <div class="doubt-q">¿Qué fue la Guerra Civil americana?</div>
+            <div class="doubt-meta">
+              <span class="badge badge-orange">Historia</span>
+              <span>Pendiente</span>
+              <span class="badge" style="background:var(--orange-light);color:var(--orange)">Sin respuesta</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">Por materia</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="card" style="text-align:center;padding:10px">
+            <div style="font-size:20px;margin-bottom:4px">🔬</div>
+            <div style="font-size:12px;font-weight:700">Biología</div>
+            <div style="font-size:11px;color:var(--text-muted)">3 dudas</div>
+          </div>
+          <div class="card" style="text-align:center;padding:10px">
+            <div style="font-size:20px;margin-bottom:4px">📐</div>
+            <div style="font-size:12px;font-weight:700">Matemáticas</div>
+            <div style="font-size:11px;color:var(--text-muted)">1 duda</div>
+          </div>
+          <div class="card" style="text-align:center;padding:10px">
+            <div style="font-size:20px;margin-bottom:4px">📜</div>
+            <div style="font-size:12px;font-weight:700">Historia</div>
+            <div style="font-size:11px;color:var(--text-muted)">2 dudas</div>
+          </div>
+          <div class="card" style="text-align:center;padding:10px">
+            <div style="font-size:20px;margin-bottom:4px">🌿</div>
+            <div style="font-size:12px;font-weight:700">Ciencias</div>
+            <div style="font-size:11px;color:var(--text-muted)">1 duda</div>
+          </div>
+        </div>
+      </div>
+      <div class="input-row">
+        <input class="input-box" placeholder="Escribe tu duda aquí..." />
+        <button class="send-btn">↑</button>
+      </div>
+    </div>
+
+    <div id="view-feedback" class="view hidden">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <h2>Feedback</h2>
+            <p>Retroalimentación de proyectos</p>
+          </div>
+          <span class="badge badge-green" style="font-size:11px">5 nuevos</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="section-title">Proyectos recientes</div>
+        <div class="card">
+          <div class="feed-item">
+            <div class="feed-header">
+              <div>
+                <div class="feed-subject">History Project</div>
+                <div style="font-size:11px;color:var(--text-muted)">Prof. Mazuret · hace 1 hora</div>
+              </div>
+              <div class="feed-grade">8.5</div>
+            </div>
+            <div class="feed-comment">Great work! Please provide more details on the Civil War section. Your analysis is strong but needs more primary sources.</div>
+            <div class="feed-bar"><div class="feed-bar-fill" style="width:85%"></div></div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-header">
+              <div>
+                <div class="feed-subject">Research Paper — Biología</div>
+                <div style="font-size:11px;color:var(--text-muted)">Prof. Rojas · ayer</div>
+              </div>
+              <div class="feed-grade" style="color:var(--blue)">7.0</div>
+            </div>
+            <div class="feed-comment">Buena estructura. Falta profundizar en la sección de resultados y mejorar las referencias bibliográficas.</div>
+            <div class="feed-bar"><div class="feed-bar-fill" style="width:70%;background:var(--blue)"></div></div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-header">
+              <div>
+                <div class="feed-subject">Presentación PPT</div>
+                <div style="font-size:11px;color:var(--text-muted)">Prof. García · 2 días</div>
+              </div>
+              <div class="feed-grade">9.2</div>
+            </div>
+            <div class="feed-comment">Excelente presentación. Diseño muy claro y datos bien explicados. ¡Sigue así!</div>
+            <div class="feed-bar"><div class="feed-bar-fill" style="width:92%"></div></div>
+          </div>
+        </div>
+
+        <div class="section-title">Tu rendimiento</div>
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--green)">8.2</div>
+            <div class="stat-label">Promedio general</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--blue)">12</div>
+            <div class="stat-label">Proyectos totales</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav-bar">
+      <div class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-item" id="nav-calendar" onclick="switchView('calendar')">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Calendario</span>
+      </div>
+      <div class="nav-item" id="nav-doubts" onclick="switchView('doubts')">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Dudas</span>
+      </div>
+      <div class="nav-item" id="nav-feedback" onclick="switchView('feedback')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Feedback</span>
+      </div>
+    </nav>
+
+  </div>
+</div>
+
+<script>
+function switchView(name) {
+  ['dashboard','calendar','doubts','feedback'].forEach(v => {
+    document.getElementById('view-'+v).classList.add('hidden');
+    document.getElementById('nav-'+v).classList.remove('active');
+  });
+  document.getElementById('view-'+name).classList.remove('hidden');
+  document.getElementById('nav-'+name).classList.add('active');
+}
+</script>
