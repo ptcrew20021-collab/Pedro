@@ -1,0 +1,287 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .sb-wrap {
+    font-family: 'Lato', sans-serif;
+    background: #1E3932;
+    padding: 24px 20px 32px;
+    border-radius: 16px;
+  }
+  .sb-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .sb-logo svg { width: 40px; height: 40px; }
+  .sb-logo-text { color: #fff; font-size: 20px; font-weight: 900; letter-spacing: 0.04em; }
+  .sb-logo-sub { color: #CBA258; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+
+  .sb-section-title {
+    color: #CBA258;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sb-section-title span { opacity: 0.5; font-size: 16px; }
+
+  .sb-card {
+    background: #fff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sb-card:last-child { margin-bottom: 0; }
+
+  .sb-card-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f0ece4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+
+  .sb-card-body { flex: 1; min-width: 0; padding-right: 80px; }
+  .sb-card-drink {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1E3932;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sb-card-person {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+  }
+
+  .sb-edit-input {
+    width: 100%;
+    font-size: 12px;
+    font-family: 'Lato', sans-serif;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: #1E3932;
+    outline: none;
+    background: #f9fdf9;
+  }
+  .sb-edit-input:focus { border-color: #00704A; }
+
+  .sb-badge {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: #1E3932;
+    color: #CBA258;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sb-badge.pending { background: #f0ece4; color: #8D6E63; }
+  .sb-badge.food { background: #e8f5e9; color: #2E7D32; }
+  .sb-badge.food-pending { background: #fff3e0; color: #E65100; }
+
+  .sb-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    margin: 18px 0;
+  }
+
+  .sb-footer {
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 16px;
+  }
+
+  .sb-save-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    background: #00704A;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .sb-save-btn:hover { background: #1E3932; }
+</style>
+
+<div class="sb-wrap">
+  <div class="sb-logo">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="100" fill="#00704A"/>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#CBA258" stroke-width="4"/>
+      <text x="100" y="118" text-anchor="middle" font-size="72" fill="white" font-family="serif">☕</text>
+    </svg>
+    <div>
+      <div class="sb-logo-text">Starbucks</div>
+      <div class="sb-logo-sub">Pedidos del grupo</div>
+    </div>
+  </div>
+
+  <div class="sb-section-title"><span>☕</span> Bebidas</div>
+
+  <div class="sb-card">
+    <div class="sb-card-img">🥭</div>
+    <div class="sb-card-body">
+      <div class="sb-card-drink">Mango Dragonfruit Limonada</div>
+      <div class="sb-card-person">👤 Pedro</div>
+    </div>
+    <div class="sb-badge">Confirmado</div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-card-img">☕</div>
+    <div class="sb-card-body">
+      <div class="sb-card-drink">Caramel Macchiato</div>
+      <div class="sb-card-person">👤 Vale</div>
+    </div>
+    <div class="sb-badge">Confirmado</div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-card-img">🥛</div>
+    <div class="sb-card-body">
+      <div class="sb-card-drink">Cappuccino sin lactosa</div>
+      <div class="sb-card-person">👤 China</div>
+    </div>
+    <div class="sb-badge">Confirmado</div>
+  </div>
+
+  <div class="sb-card">
+    <div class="sb-card-img">❓</div>
+    <div class="sb-card-body">
+      <div class="sb-card-drink">Por definir</div>
+      <div class="sb-card-person">👤 Robe</div>
+    </div>
+    <div class="sb-badge pending">Pendiente</div>
+  </div>
+
+  <hr class="sb-divider"/>
+
+  <div class="sb-section-title"><span>🥐</span> Comida</div>
+
+  <div class="sb-card" id="food-pedro">
+    <div class="sb-card-img">🍽️</div>
+    <div class="sb-card-body">
+      <div class="sb-card-person" style="margin-bottom:6px;">👤 Pedro</div>
+      <input class="sb-edit-input" id="input-pedro" placeholder="Escribe el pedido de Pedro..." />
+    </div>
+    <div class="sb-badge food-pending" id="badge-pedro">Pendiente</div>
+  </div>
+
+  <div class="sb-card" id="food-vale">
+    <div class="sb-card-img">🍽️</div>
+    <div class="sb-card-body">
+      <div class="sb-card-person" style="margin-bottom:6px;">👤 Vale</div>
+      <input class="sb-edit-input" id="input-vale" placeholder="Escribe el pedido de Vale..." />
+    </div>
+    <div class="sb-badge food-pending" id="badge-vale">Pendiente</div>
+  </div>
+
+  <div class="sb-card" id="food-china">
+    <div class="sb-card-img">🍽️</div>
+    <div class="sb-card-body">
+      <div class="sb-card-person" style="margin-bottom:6px;">👤 China</div>
+      <input class="sb-edit-input" id="input-china" placeholder="Escribe el pedido de China..." />
+    </div>
+    <div class="sb-badge food-pending" id="badge-china">Pendiente</div>
+  </div>
+
+  <div class="sb-card" id="food-robe">
+    <div class="sb-card-img">🍽️</div>
+    <div class="sb-card-body">
+      <div class="sb-card-person" style="margin-bottom:6px;">👤 Robe</div>
+      <input class="sb-edit-input" id="input-robe" placeholder="Escribe el pedido de Robe..." />
+    </div>
+    <div class="sb-badge food-pending" id="badge-robe">Pendiente</div>
+  </div>
+
+  <button class="sb-save-btn" onclick="guardar()">Guardar pedidos ✓</button>
+
+  <div class="sb-footer" id="footer-text">4 personas · Comida pendiente</div>
+</div>
+
+<script>
+  const names = ['pedro','vale','china','robe'];
+
+  names.forEach(name => {
+    const input = document.getElementById('input-' + name);
+    const badge = document.getElementById('badge-' + name);
+    const card = document.getElementById('food-' + name);
+    const emoji = card.querySelector('.sb-card-img');
+
+    input.addEventListener('input', () => {
+      if (input.value.trim()) {
+        badge.textContent = 'Listo';
+        badge.className = 'sb-badge food';
+        emoji.textContent = '🥐';
+      } else {
+        badge.textContent = 'Pendiente';
+        badge.className = 'sb-badge food-pending';
+        emoji.textContent = '🍽️';
+      }
+      updateFooter();
+    });
+  });
+
+  function updateFooter() {
+    const confirmed = names.filter(n => document.getElementById('input-' + n).value.trim()).length;
+    document.getElementById('footer-text').textContent =
+      '4 personas · ' + confirmed + ' de 4 comidas confirmadas';
+  }
+
+  function guardar() {
+    const resultados = names.map(n => {
+      const val = document.getElementById('input-' + n).value.trim();
+      return val ? n.charAt(0).toUpperCase() + n.slice(1) + ': ' + val : null;
+    }).filter(Boolean);
+
+    const total = resultados.length;
+    const btn = document.querySelector('.sb-save-btn');
+
+    if (total === 0) {
+      btn.textContent = '⚠️ Nadie ha pedido aún';
+      setTimeout(() => btn.textContent = 'Guardar pedidos ✓', 2000);
+    } else if (total < 4) {
+      btn.textContent = '✅ ' + total + '/4 guardados — faltan ' + (4 - total);
+      setTimeout(() => btn.textContent = 'Guardar pedidos ✓', 3000);
+    } else {
+      btn.textContent = '✅ ¡Todo confirmado!';
+      btn.style.background = '#2E7D32';
+    }
+  }
+</script>
